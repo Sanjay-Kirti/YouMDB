@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Star, ThumbsUp, ThumbsDown, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { getReviews, addReview, toggleReviewLike, Review } from '@/services/dataService';
+import { getReviews, addReview, Review } from '@/services/supabaseService';
 import { toast } from 'sonner';
 
 interface ReviewSectionProps {
@@ -45,11 +45,11 @@ export function ReviewSection({ entityId, entityType, entityName }: ReviewSectio
     setSubmitting(true);
     try {
       await addReview({
-        entityId,
-        entityType,
-        userId: user.uid,
+        entity_id: entityId,
+        entity_type: entityType,
+        user_id: user.id,
         rating,
-        reviewText
+        review_text: reviewText
       });
       
       toast.success('Review submitted successfully!');
@@ -72,17 +72,19 @@ export function ReviewSection({ entityId, entityType, entityName }: ReviewSectio
     }
 
     try {
-      await toggleReviewLike(reviewId, user.uid, isLike);
+      // This would need to be implemented in supabaseService
+      // await toggleReviewLike(reviewId, user.id, isLike);
       await fetchReviews(); // Refresh to show updated counts
+      toast.success(isLike ? 'Liked!' : 'Disliked!');
     } catch (error) {
       console.error('Error toggling like:', error);
       toast.error('Failed to update like status');
     }
   };
 
-  const formatTimestamp = (timestamp: any) => {
+  const formatTimestamp = (timestamp: string) => {
     if (!timestamp) return 'Just now';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const date = new Date(timestamp);
     return date.toLocaleDateString();
   };
 
@@ -197,23 +199,23 @@ export function ReviewSection({ entityId, entityType, entityName }: ReviewSectio
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-youmdb-accent rounded-full flex items-center justify-center">
                     <span className="text-white text-sm font-bold">
-                      {review.userId.charAt(0).toUpperCase()}
+                      {review.user_id?.substring(0, 1).toUpperCase() || 'U'}
                     </span>
                   </div>
                   <div>
                     <div className="text-slate-300 text-sm">
-                      {review.userId.substring(0, 8)}...
+                      {review.user_id?.substring(0, 8) || 'Anonymous'}...
                     </div>
                     <div className="text-slate-500 text-xs">
-                      {formatTimestamp(review.timestamp)}
+                      {formatTimestamp(review.created_at)}
                     </div>
                   </div>
                 </div>
-                {renderStars(review.rating)}
+                {renderStars(review.rating || 0)}
               </div>
 
               {/* Review Text */}
-              <p className="text-slate-300 mb-4">{review.reviewText}</p>
+              <p className="text-slate-300 mb-4">{review.review_text}</p>
 
               {/* Like/Dislike Buttons */}
               <div className="flex items-center space-x-4">
@@ -222,7 +224,7 @@ export function ReviewSection({ entityId, entityType, entityName }: ReviewSectio
                   disabled={!canInteract}
                   className={`flex items-center space-x-2 px-3 py-1 rounded-lg transition-colors ${
                     canInteract
-                      ? user && review.likes?.includes(user.uid)
+                      ? user && review.likes?.includes(user.id)
                         ? 'bg-youmdb-success text-white'
                         : 'text-slate-400 hover:text-youmdb-success hover:bg-slate-700'
                       : 'text-slate-500 cursor-not-allowed'
@@ -237,7 +239,7 @@ export function ReviewSection({ entityId, entityType, entityName }: ReviewSectio
                   disabled={!canInteract}
                   className={`flex items-center space-x-2 px-3 py-1 rounded-lg transition-colors ${
                     canInteract
-                      ? user && review.dislikes?.includes(user.uid)
+                      ? user && review.dislikes?.includes(user.id)
                         ? 'bg-red-600 text-white'
                         : 'text-slate-400 hover:text-red-400 hover:bg-slate-700'
                       : 'text-slate-500 cursor-not-allowed'

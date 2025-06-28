@@ -146,7 +146,12 @@ export async function getReviews(entityId: string, entityType: 'youtuber' | 'vid
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    // Cast the entity_type to match our Review interface
+    return (data || []).map(review => ({
+      ...review,
+      entity_type: review.entity_type as 'youtuber' | 'video'
+    }));
   } catch (error) {
     console.error('Error fetching reviews:', error);
     return [];

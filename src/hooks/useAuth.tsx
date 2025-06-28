@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,7 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq('id', session.user.id)
             .single();
           
-          setUserRole(profile?.role || 'normal');
+          // Type guard to ensure role is valid
+          const role = profile?.role;
+          if (role === 'guest' || role === 'normal' || role === 'creator') {
+            setUserRole(role);
+          } else {
+            setUserRole('normal'); // fallback to normal if invalid role
+          }
         } else {
           setUserRole('guest');
         }
