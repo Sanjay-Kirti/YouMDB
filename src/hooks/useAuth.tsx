@@ -1,124 +1,162 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  User, 
-  signInAnonymously, 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  signInWithCustomToken
-} from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   userRole: 'guest' | 'normal' | 'creator';
   loading: boolean;
-  signInAsGuest: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithGithub: () => Promise<void>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
-  canInteract: boolean; // Can like, comment, review
+  canInteract: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<'guest' | 'normal' | 'creator'>('guest');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for initial auth token
-    const initialToken = (window as any).__initial_auth_token;
-    
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('Auth state changed:', { user: user?.uid, isAnonymous: user?.isAnonymous });
-      setUser(user);
-      
-      if (user) {
-        // Determine user role based on authentication method
-        if (user.isAnonymous) {
-          setUserRole('guest');
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', { event, user: session?.user?.id });
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Fetch user profile to determine role
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+          
+          setUserRole(profile?.role || 'normal');
         } else {
-          // For now, all non-anonymous users are 'normal' users
-          // In the future, we can implement creator role detection
-          setUserRole('normal');
+          setUserRole('guest');
         }
-      } else {
-        setUserRole('guest');
+        
+        setLoading(false);
       }
-      
+    );
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Auto sign in anonymously if no user and no initial token
-    if (!initialToken) {
-      signInAnonymously(auth).catch(console.error);
-    } else {
-      // Handle initial auth token if provided
-      signInWithCustomToken(auth, initialToken).catch(console.error);
-    }
-
-    return unsubscribe;
+    return () => subscription.unsubscribe();
   }, []);
-
-  const signInAsGuest = async () => {
-    try {
-      await signInAnonymously(auth);
-      toast.success('Signed in as guest');
-    } catch (error) {
-      console.error('Guest sign in failed:', error);
-      toast.error('Failed to sign in as guest');
-    }
-  };
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
       toast.success('Signed in successfully');
     } catch (error: any) {
       console.error('Email sign in failed:', error);
       toast.error(error.message || 'Failed to sign in');
+      throw error;
     }
   };
 
   const signUpWithEmail = async (email: string, password: string) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      toast.success('Account created successfully');
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      });
+      
+      if (error) throw error;
+      toast.success('Account created successfully! Check your email to confirm.');
     } catch (error: any) {
       console.error('Email sign up failed:', error);
       toast.error(error.message || 'Failed to create account');
+      throw error;
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Google sign in failed:', error);
+      toast.error('Failed to sign in with Google');
+      throw error;
+    }
+  };
+
+  const signInWithGithub = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('GitHub sign in failed:', error);
+      toast.error('Failed to sign in with GitHub');
+      throw error;
     }
   };
 
   const signOut = async () => {
     try {
-      await firebaseSignOut(auth);
-      // Auto sign in anonymously after sign out
-      await signInAnonymously(auth);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       toast.success('Signed out successfully');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign out failed:', error);
       toast.error('Failed to sign out');
+      throw error;
     }
   };
 
   const isAuthenticated = !!user;
-  const canInteract = userRole !== 'guest'; // Only normal users and creators can interact
+  const canInteract = isAuthenticated; // Authenticated users can interact
 
   return (
     <AuthContext.Provider value={{
       user,
+      session,
       userRole,
       loading,
-      signInAsGuest,
       signInWithEmail,
       signUpWithEmail,
+      signInWithGoogle,
+      signInWithGithub,
       signOut,
       isAuthenticated,
       canInteract

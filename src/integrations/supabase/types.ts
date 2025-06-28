@@ -9,7 +9,173 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          role: string | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          role?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          created_at: string | null
+          dislikes: string[] | null
+          entity_id: string
+          entity_type: string
+          id: string
+          likes: string[] | null
+          rating: number | null
+          review_text: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dislikes?: string[] | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          likes?: string[] | null
+          rating?: number | null
+          review_text?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dislikes?: string[] | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          likes?: string[] | null
+          rating?: number | null
+          review_text?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      videos: {
+        Row: {
+          average_rating: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          publish_date: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+          video_url: string | null
+          views: number | null
+          youtuber_id: string | null
+        }
+        Insert: {
+          average_rating?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          publish_date?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+          video_url?: string | null
+          views?: number | null
+          youtuber_id?: string | null
+        }
+        Update: {
+          average_rating?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          publish_date?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+          video_url?: string | null
+          views?: number | null
+          youtuber_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_youtuber_id_fkey"
+            columns: ["youtuber_id"]
+            isOneToOne: false
+            referencedRelation: "youtubers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      youtubers: {
+        Row: {
+          average_rating: number | null
+          bio: string | null
+          country: string | null
+          created_at: string | null
+          genre: string | null
+          id: string
+          name: string
+          owner_user_id: string | null
+          profile_picture_url: string | null
+          state: string | null
+          subscriber_count: number | null
+          total_views: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          average_rating?: number | null
+          bio?: string | null
+          country?: string | null
+          created_at?: string | null
+          genre?: string | null
+          id?: string
+          name: string
+          owner_user_id?: string | null
+          profile_picture_url?: string | null
+          state?: string | null
+          subscriber_count?: number | null
+          total_views?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          average_rating?: number | null
+          bio?: string | null
+          country?: string | null
+          created_at?: string | null
+          genre?: string | null
+          id?: string
+          name?: string
+          owner_user_id?: string | null
+          profile_picture_url?: string | null
+          state?: string | null
+          subscriber_count?: number | null
+          total_views?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -8,7 +8,7 @@ import { AuthModal } from '@/components/Auth/AuthModal';
 export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, userRole, signOut, canInteract } = useAuth();
+  const { user, userRole, signOut, canInteract, loading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const navigationItems = [
@@ -19,12 +19,30 @@ export function Header() {
   ];
 
   const handleAuthClick = () => {
-    if (user && !user.isAnonymous) {
+    if (user) {
       signOut();
     } else {
       setShowAuthModal(true);
     }
   };
+
+  if (loading) {
+    return (
+      <header className="bg-youmdb-secondary border-b border-slate-700 sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-youmdb-accent to-youmdb-purple-light rounded-lg flex items-center justify-center">
+                <Video className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold youmdb-text-gradient">YouMDB</span>
+            </div>
+            <div className="w-20 h-10 bg-slate-700 rounded animate-pulse"></div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>
@@ -62,12 +80,12 @@ export function Header() {
 
             {/* User Section */}
             <div className="flex items-center space-x-4">
-              {/* User ID Display */}
+              {/* User Info Display */}
               {user && (
                 <div className="hidden sm:flex items-center space-x-2 text-sm">
                   <User className="w-4 h-4 text-slate-400" />
                   <span className="text-slate-300">
-                    {user.isAnonymous ? 'Guest' : user.uid?.substring(0, 8)}...
+                    {user.email?.split('@')[0] || user.id?.substring(0, 8)}...
                   </span>
                   <span className={`px-2 py-1 rounded-full text-xs ${
                     userRole === 'guest' 
@@ -86,7 +104,7 @@ export function Header() {
                 onClick={handleAuthClick}
                 className="flex items-center space-x-2 youmdb-button"
               >
-                {user && !user.isAnonymous ? (
+                {user ? (
                   <>
                     <LogOut className="w-4 h-4" />
                     <span className="hidden sm:inline">Sign Out</span>

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, MapPin, Star, Eye } from 'lucide-react';
-import { getYouTubers, YouTuber } from '@/services/dataService';
+import { getYouTubers, YouTuber } from '@/services/supabaseService';
 
 export default function YouTubersPage() {
   const navigate = useNavigate();
@@ -73,7 +73,7 @@ export default function YouTubersPage() {
             {/* Profile Picture */}
             <div className="text-center mb-4">
               <img
-                src={youtuber.profilePictureUrl}
+                src={youtuber.profile_picture_url || `https://placehold.co/150x150/7c3aed/ffffff?text=${youtuber.name.charAt(0)}`}
                 alt={youtuber.name}
                 className="w-24 h-24 rounded-full mx-auto border-4 border-youmdb-accent object-cover"
                 onError={(e) => {
@@ -87,22 +87,28 @@ export default function YouTubersPage() {
             <h3 className="text-xl font-bold text-white text-center mb-2">
               {youtuber.name}
             </h3>
-            <div className="text-center mb-3">
-              <span className="bg-youmdb-accent text-white px-3 py-1 rounded-full text-sm">
-                {youtuber.genre}
-              </span>
-            </div>
+            {youtuber.genre && (
+              <div className="text-center mb-3">
+                <span className="bg-youmdb-accent text-white px-3 py-1 rounded-full text-sm">
+                  {youtuber.genre}
+                </span>
+              </div>
+            )}
 
             {/* Bio */}
-            <p className="text-slate-300 text-sm text-center mb-4 line-clamp-2">
-              {youtuber.bio}
-            </p>
+            {youtuber.bio && (
+              <p className="text-slate-300 text-sm text-center mb-4 line-clamp-2">
+                {youtuber.bio}
+              </p>
+            )}
 
             {/* Location */}
-            <div className="flex items-center justify-center text-slate-400 text-sm mb-4">
-              <MapPin className="w-4 h-4 mr-1" />
-              <span>{youtuber.state}, {youtuber.country}</span>
-            </div>
+            {youtuber.country && (
+              <div className="flex items-center justify-center text-slate-400 text-sm mb-4">
+                <MapPin className="w-4 h-4 mr-1" />
+                <span>{youtuber.state ? `${youtuber.state}, ` : ''}{youtuber.country}</span>
+              </div>
+            )}
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 text-center">
@@ -111,7 +117,7 @@ export default function YouTubersPage() {
                   <Users className="w-4 h-4 mr-1" />
                 </div>
                 <div className="text-white font-semibold text-sm">
-                  {formatNumber(youtuber.subscriberCount)}
+                  {formatNumber(youtuber.subscriber_count)}
                 </div>
                 <div className="text-slate-400 text-xs">Subscribers</div>
               </div>
@@ -121,7 +127,7 @@ export default function YouTubersPage() {
                   <Eye className="w-4 h-4 mr-1" />
                 </div>
                 <div className="text-white font-semibold text-sm">
-                  {formatNumber(youtuber.totalViews)}
+                  {formatNumber(youtuber.total_views)}
                 </div>
                 <div className="text-slate-400 text-xs">Total Views</div>
               </div>
@@ -131,7 +137,7 @@ export default function YouTubersPage() {
                   <Star className="w-4 h-4 mr-1" />
                 </div>
                 <div className="text-white font-semibold text-sm">
-                  {youtuber.averageRating.toFixed(1)}
+                  {youtuber.average_rating.toFixed(1)}
                 </div>
                 <div className="text-slate-400 text-xs">Rating</div>
               </div>
