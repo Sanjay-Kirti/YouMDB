@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Eye, Star, Calendar, User } from 'lucide-react';
-import { getVideos, getYouTubers, Video, YouTuber } from '@/services/dataService';
+import { getVideos, getYouTubers, Video, YouTuber } from '@/services/supabaseService';
 
 export default function VideosPage() {
   const navigate = useNavigate();
@@ -25,7 +24,6 @@ export default function VideosPage() {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
@@ -50,7 +48,7 @@ export default function VideosPage() {
           <Star
             key={star}
             className={`w-4 h-4 ${
-              star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-400'
+              star <= rating ? 'text-yellow-400 fill-current' : 'text-neutral-300'
             }`}
           />
         ))}
@@ -63,12 +61,12 @@ export default function VideosPage() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="youmdb-card overflow-hidden animate-pulse">
-              <div className="w-full h-48 bg-slate-700"></div>
+            <div key={i} className="bg-neutral-100 rounded-xl overflow-hidden animate-pulse shadow">
+              <div className="w-full h-48 bg-neutral-200"></div>
               <div className="p-4">
-                <div className="h-4 bg-slate-700 rounded mb-2"></div>
-                <div className="h-3 bg-slate-700 rounded mb-4 w-3/4"></div>
-                <div className="h-3 bg-slate-700 rounded w-1/2"></div>
+                <div className="h-4 bg-neutral-200 rounded mb-2"></div>
+                <div className="h-3 bg-neutral-200 rounded mb-4 w-3/4"></div>
+                <div className="h-3 bg-neutral-200 rounded w-1/2"></div>
               </div>
             </div>
           ))}
@@ -79,28 +77,24 @@ export default function VideosPage() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      {/* Header */}
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-white mb-4">
+        <h1 className="text-4xl font-bold text-[#141414] mb-4">
           Discover Amazing Videos
         </h1>
-        <p className="text-slate-300 text-lg max-w-2xl mx-auto">
+        <p className="text-neutral-500 text-lg max-w-2xl mx-auto">
           Explore the best content from talented creators worldwide, watch videos, and share your thoughts
         </p>
       </div>
-
-      {/* Videos Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {videos.map((video) => (
           <div
             key={video.id}
             onClick={() => navigate(`/video/${video.id}`)}
-            className="youmdb-card overflow-hidden cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-2xl"
+            className="bg-white rounded-xl overflow-hidden cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-2xl border border-neutral-200 shadow"
           >
-            {/* Thumbnail */}
             <div className="relative">
               <img
-                src={video.thumbnailUrl}
+                src={video.thumbnail_url || 'https://placehold.co/480x360/1e293b/ffffff?text=Video'}
                 alt={video.title}
                 className="w-full h-48 object-cover"
                 onError={(e) => {
@@ -108,50 +102,39 @@ export default function VideosPage() {
                   target.src = 'https://placehold.co/480x360/1e293b/ffffff?text=Video';
                 }}
               />
-              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                <Play className="w-12 h-12 text-white" />
+              <div className="absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
+                <Play className="w-12 h-12 text-neutral-700" />
               </div>
             </div>
-
-            {/* Content */}
             <div className="p-4">
-              {/* Title */}
-              <h3 className="font-bold text-white text-lg mb-2 line-clamp-2 hover:text-youmdb-accent transition-colors">
+              <h3 className="font-bold text-[#141414] text-lg mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
                 {video.title}
               </h3>
-
-              {/* Creator */}
-              <div className="flex items-center text-slate-400 text-sm mb-3">
+              <div className="flex items-center text-neutral-400 text-sm mb-3">
                 <User className="w-4 h-4 mr-1" />
-                <span>{getYouTuberName(video.youtuberId)}</span>
+                <span>{getYouTuberName(video.youtuber_id)}</span>
               </div>
-
-              {/* Description */}
-              <p className="text-slate-300 text-sm mb-4 line-clamp-2">
-                {video.description}
+              <p className="text-neutral-500 text-sm mb-4 line-clamp-2">
+                {video.description || 'No description available'}
               </p>
-
-              {/* Stats Row 1 */}
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center text-slate-400 text-sm">
-                  <Eye className="w-4 h-4 mr-1 text-youmdb-highlight" />
+                <div className="flex items-center text-neutral-400 text-sm">
+                  <Eye className="w-4 h-4 mr-1 text-neutral-400" />
                   <span>{formatNumber(video.views)} views</span>
                 </div>
-                <div className="flex items-center text-slate-400 text-sm">
-                  <Calendar className="w-4 h-4 mr-1 text-youmdb-accent" />
-                  <span>{video.publishDate}</span>
+                <div className="flex items-center text-neutral-400 text-sm">
+                  <Calendar className="w-4 h-4 mr-1 text-neutral-400" />
+                  <span>{video.publish_date || 'Unknown date'}</span>
                 </div>
               </div>
-
-              {/* Stats Row 2 */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  {renderStars(Math.round(video.averageRating))}
-                  <span className="text-slate-400 text-sm">
-                    {video.averageRating.toFixed(1)}
+                  {renderStars(Math.round(video.average_rating))}
+                  <span className="text-neutral-400 text-sm">
+                    {video.average_rating.toFixed(1)}
                   </span>
                 </div>
-                <div className="text-youmdb-success text-sm font-semibold">
+                <div className="text-blue-600 text-sm font-semibold">
                   Watch Now
                 </div>
               </div>
@@ -159,13 +142,11 @@ export default function VideosPage() {
           </div>
         ))}
       </div>
-
-      {/* Empty State */}
       {videos.length === 0 && !loading && (
         <div className="text-center py-12">
-          <Play className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-slate-300 mb-2">No Videos Found</h3>
-          <p className="text-slate-400">Check back later for amazing content!</p>
+          <Play className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-neutral-400 mb-2">No Videos Found</h3>
+          <p className="text-neutral-400">Check back later for amazing content!</p>
         </div>
       )}
     </div>

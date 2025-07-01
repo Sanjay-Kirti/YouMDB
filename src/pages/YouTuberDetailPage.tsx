@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -16,9 +15,8 @@ import {
   getVideosByYouTuberId, 
   YouTuber, 
   Video 
-} from '@/services/dataService';
+} from '@/services/supabaseService';
 import { generateCreatorInsights } from '@/services/aiService';
-import { InteractiveSphere } from '@/components/3D/InteractiveSphere';
 import { ReviewSection } from '@/components/Reviews/ReviewSection';
 import { toast } from 'sonner';
 
@@ -127,7 +125,7 @@ export default function YouTuberDetailPage() {
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
           {/* Profile Image */}
           <img
-            src={youtuber.profilePictureUrl}
+            src={youtuber.profile_picture_url || `https://placehold.co/200x200/7c3aed/ffffff?text=${youtuber.name.charAt(0)}`}
             alt={youtuber.name}
             className="w-32 h-32 rounded-full border-4 border-youmdb-accent object-cover mx-auto lg:mx-0"
             onError={(e) => {
@@ -141,14 +139,14 @@ export default function YouTuberDetailPage() {
             <h1 className="text-4xl font-bold text-white mb-2">{youtuber.name}</h1>
             <div className="flex items-center justify-center lg:justify-start text-slate-400 mb-4">
               <MapPin className="w-5 h-5 mr-2" />
-              <span>{youtuber.state}, {youtuber.country}</span>
+              <span>{youtuber.state || 'Unknown'}, {youtuber.country || 'Unknown'}</span>
             </div>
-            <p className="text-slate-300 text-lg mb-6 max-w-2xl">{youtuber.bio}</p>
+            <p className="text-slate-300 text-lg mb-6 max-w-2xl">{youtuber.bio || 'No bio available'}</p>
             
             {/* Genre Badge */}
             <div className="mb-6">
               <span className="bg-youmdb-accent text-white px-4 py-2 rounded-full text-sm font-medium">
-                {youtuber.genre}
+                {youtuber.genre || 'General'}
               </span>
             </div>
 
@@ -159,7 +157,7 @@ export default function YouTuberDetailPage() {
                   <Users className="w-6 h-6 mr-1" />
                 </div>
                 <div className="text-2xl font-bold text-white">
-                  {formatNumber(youtuber.subscriberCount)}
+                  {formatNumber(youtuber.subscriber_count)}
                 </div>
                 <div className="text-slate-400 text-sm">Subscribers</div>
               </div>
@@ -169,7 +167,7 @@ export default function YouTuberDetailPage() {
                   <Eye className="w-6 h-6 mr-1" />
                 </div>
                 <div className="text-2xl font-bold text-white">
-                  {formatNumber(youtuber.totalViews)}
+                  {formatNumber(youtuber.total_views)}
                 </div>
                 <div className="text-slate-400 text-sm">Total Views</div>
               </div>
@@ -179,19 +177,13 @@ export default function YouTuberDetailPage() {
                   <Star className="w-6 h-6 mr-1" />
                 </div>
                 <div className="text-2xl font-bold text-white">
-                  {youtuber.averageRating.toFixed(1)}
+                  {youtuber.average_rating.toFixed(1)}
                 </div>
                 <div className="text-slate-400 text-sm">Rating</div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* 3D Interactive Element */}
-      <div className="youmdb-card p-6 mb-8">
-        <h2 className="text-2xl font-bold text-white mb-4 text-center">Interactive Experience</h2>
-        <InteractiveSphere />
       </div>
 
       {/* AI Insights Section */}
@@ -247,7 +239,7 @@ export default function YouTuberDetailPage() {
                 className="bg-slate-800 rounded-lg overflow-hidden cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-xl"
               >
                 <img
-                  src={video.thumbnailUrl}
+                  src={video.thumbnail_url || 'https://placehold.co/480x360/1e293b/ffffff?text=Video'}
                   alt={video.title}
                   className="w-full h-40 object-cover"
                   onError={(e) => {
@@ -257,7 +249,7 @@ export default function YouTuberDetailPage() {
                 />
                 <div className="p-4">
                   <h3 className="font-semibold text-white mb-2 line-clamp-2">{video.title}</h3>
-                  <p className="text-slate-400 text-sm mb-3 line-clamp-2">{video.description}</p>
+                  <p className="text-slate-400 text-sm mb-3 line-clamp-2">{video.description || 'No description available'}</p>
                   <div className="flex items-center justify-between text-xs text-slate-500">
                     <div className="flex items-center">
                       <Eye className="w-3 h-3 mr-1" />
@@ -265,7 +257,7 @@ export default function YouTuberDetailPage() {
                     </div>
                     <div className="flex items-center">
                       <Calendar className="w-3 h-3 mr-1" />
-                      {video.publishDate}
+                      {video.publish_date || 'Unknown date'}
                     </div>
                   </div>
                 </div>

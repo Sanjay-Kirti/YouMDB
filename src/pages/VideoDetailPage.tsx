@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -9,14 +8,15 @@ import {
   Calendar,
   User,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  MessageSquare
 } from 'lucide-react';
 import { 
   getVideoById, 
   getYouTuberById, 
   Video, 
   YouTuber 
-} from '@/services/dataService';
+} from '@/services/supabaseService';
 import { generateVideoSummary } from '@/services/aiService';
 import { ReviewSection } from '@/components/Reviews/ReviewSection';
 import { toast } from 'sonner';
@@ -42,13 +42,10 @@ export default function VideoDetailPage() {
       setVideo(videoData);
       
       if (videoData) {
-        const youtuberData = await getYouTuberById(videoData.youtuberId);
+        const youtuberData = await getYouTuberById(videoData.youtuber_id);
         setYoutuber(youtuberData);
         
-        // Set existing AI summary if available
-        if (videoData.aiSummary) {
-          setAiSummary(videoData.aiSummary);
-        }
+        // Note: AI summary is not stored in Supabase, so we don't set it here
       }
     } catch (error) {
       console.error('Error fetching video data:', error);
@@ -93,7 +90,7 @@ export default function VideoDetailPage() {
           <Star
             key={star}
             className={`w-5 h-5 ${
-              star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-400'
+              star <= rating ? 'text-yellow-400 fill-current' : 'text-neutral-300'
             }`}
           />
         ))}
@@ -104,11 +101,11 @@ export default function VideoDetailPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="youmdb-card p-8 animate-pulse">
-          <div className="w-full h-64 bg-slate-700 rounded-lg mb-6"></div>
-          <div className="h-8 bg-slate-700 rounded mb-4 w-3/4"></div>
-          <div className="h-4 bg-slate-700 rounded mb-2"></div>
-          <div className="h-4 bg-slate-700 rounded w-1/2"></div>
+        <div className="bg-neutral-100 rounded-xl p-8 animate-pulse shadow">
+          <div className="w-full h-64 bg-neutral-200 rounded-lg mb-6"></div>
+          <div className="h-8 bg-neutral-200 rounded mb-4 w-3/4"></div>
+          <div className="h-4 bg-neutral-200 rounded mb-2"></div>
+          <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
         </div>
       </div>
     );
@@ -117,10 +114,10 @@ export default function VideoDetailPage() {
   if (!video) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <h1 className="text-2xl font-bold text-white mb-4">Video Not Found</h1>
+        <h1 className="text-2xl font-bold text-[#141414] mb-4">Video Not Found</h1>
         <button
           onClick={() => navigate('/videos')}
-          className="youmdb-button"
+          className="bg-neutral-200 text-[#141414] px-4 py-2 rounded-lg mt-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Videos
@@ -134,7 +131,7 @@ export default function VideoDetailPage() {
       {/* Back Button */}
       <button
         onClick={() => navigate('/videos')}
-        className="flex items-center text-youmdb-accent hover:text-youmdb-purple-light mb-6 transition-colors"
+        className="flex items-center text-blue-600 hover:text-blue-800 mb-6 transition-colors"
       >
         <ArrowLeft className="w-5 h-5 mr-2" />
         Back to Videos
@@ -144,7 +141,7 @@ export default function VideoDetailPage() {
       <div className="youmdb-card p-6 mb-8">
         <div className="relative bg-black rounded-lg overflow-hidden">
           <img
-            src={video.thumbnailUrl}
+            src={video.thumbnail_url}
             alt={video.title}
             className="w-full h-96 object-cover"
             onError={(e) => {
@@ -157,7 +154,7 @@ export default function VideoDetailPage() {
               <Play className="w-20 h-20 text-white mb-4 mx-auto" />
               <p className="text-white text-lg mb-4">Video Player Placeholder</p>
               <a
-                href={video.videoUrl}
+                href={video.video_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="youmdb-button inline-flex items-center"
@@ -179,7 +176,7 @@ export default function VideoDetailPage() {
         {youtuber && (
           <div className="flex items-center mb-4">
             <img
-              src={youtuber.profilePictureUrl}
+              src={youtuber.profile_picture_url}
               alt={youtuber.name}
               className="w-12 h-12 rounded-full border-2 border-youmdb-accent mr-4"
               onError={(e) => {
@@ -195,7 +192,7 @@ export default function VideoDetailPage() {
                 {youtuber.name}
               </button>
               <div className="text-slate-400 text-sm">
-                {formatNumber(youtuber.subscriberCount)} subscribers
+                {formatNumber(youtuber.subscriber_count)} subscribers
               </div>
             </div>
           </div>
@@ -209,12 +206,12 @@ export default function VideoDetailPage() {
           </div>
           <div className="flex items-center text-slate-300">
             <Calendar className="w-5 h-5 mr-2 text-youmdb-accent" />
-            <span>{video.publishDate}</span>
+            <span>{video.publish_date}</span>
           </div>
           <div className="flex items-center space-x-2">
-            {renderStars(Math.round(video.averageRating))}
+            {renderStars(Math.round(video.average_rating))}
             <span className="text-slate-300">
-              {video.averageRating.toFixed(1)} rating
+              {video.average_rating.toFixed(1)} rating
             </span>
           </div>
         </div>

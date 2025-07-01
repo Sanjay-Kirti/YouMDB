@@ -1,104 +1,112 @@
-
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
-import { Play, Star, Users, Video } from 'lucide-react';
-import { HomeScene } from '@/components/3D/HomeScene';
-import { initializeDummyData } from '@/services/dataService';
+import { useEffect, useState } from 'react';
+import { getYouTubers, getAllReviews, YouTuber, Review } from '@/services/supabaseService';
 
 const Index = () => {
   const navigate = useNavigate();
+  const [creators, setCreators] = useState<YouTuber[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize dummy data on app load
-    initializeDummyData();
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const [creatorsData, reviewsData] = await Promise.all([
+          getYouTubers(),
+          getAllReviews()
+        ]);
+        setCreators(creatorsData);
+        setReviews(reviewsData);
+      } catch (err) {
+        // handle error
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
   }, []);
 
-  return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-6xl font-bold mb-6 youmdb-text-gradient">
-            Welcome to YouMDB
-          </h1>
-          <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-            The ultimate platform for discovering, rating, and reviewing your favorite YouTubers and streamers from around the world
-          </p>
-          
-          {/* 3D Scene */}
-          <div className="mb-12">
-            <HomeScene />
-          </div>
+  const trendingCreators = creators
+    .sort((a, b) => b.subscriber_count - a.subscriber_count)
+    .slice(0, 5);
 
-          {/* CTA Button */}
+  const totalCreators = creators.length;
+  const totalReviews = reviews.length;
+  const randomReview = reviews.length > 0 ? reviews[Math.floor(Math.random() * reviews.length)] : null;
+
+  return (
+    <div className="min-h-screen bg-neutral-50 flex flex-col">
+      <div className="flex flex-1 flex-col items-center justify-center px-4 py-5">
+        <div className="layout-content-container flex flex-col max-w-[960px] flex-1 w-full">
+          <div className="@container">
+            <div className="@[480px]:px-4 @[480px]:py-3">
+              <div
+                className="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden bg-neutral-50 @[480px]:rounded-xl min-h-80"
+                style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCUBkDPd3V_2kkZzt5f1vTBQnSKbJ3yAPGe2O7GPJVTwSCKczPwj6k5JXoGph25xLUgER_gVTv_bvYW40NorwVWpJLFAVotcRcDKYqAucatLHqXF-Gy8ti1pVsXBrwZR8QHCNhe0obva-OYjp2yxhm-qioFqpVd0TC5pQQQ3WOmy7wqt_e83OndvHAecGU_xFxtyiuirMGZRlfehh6tGjMs2A3c8AZAJTQMVSpbcj0EaiZdMJVxnMGa9CUHgYtGJmgC1zFRUM6IQ6HE')"}}
+              ></div>
+            </div>
+          </div>
+          <h2 className="text-[#141414] tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5">Welcome to YouMDB</h2>
+          <p className="text-[#141414] text-base font-normal leading-normal pb-3 pt-1 px-4 text-center">
+            Discover detailed information about your favorite YouTube channels and videos. From trending content to creator insights, YouMDB provides a comprehensive view of the YouTube landscape.
+          </p>
+          <div className="flex flex-col md:flex-row gap-6 justify-center items-center my-8">
+            <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center min-w-[160px]">
+              <span className="text-3xl font-bold text-blue-600 animate-pulse">{loading ? '...' : totalCreators}</span>
+              <span className="text-neutral-500 mt-1">Total Creators</span>
+            </div>
+            <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center min-w-[160px]">
+              <span className="text-3xl font-bold text-blue-600 animate-pulse">{loading ? '...' : totalReviews}</span>
+              <span className="text-neutral-500 mt-1">Total Reviews</span>
+            </div>
+          </div>
           <button
             onClick={() => navigate('/youtubers')}
-            className="youmdb-button text-lg px-8 py-4 animate-pulse-glow"
+            className="mt-2 mb-4 px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition-colors"
           >
-            <Play className="w-6 h-6 mr-2" />
             Explore Creators
           </button>
+          <button
+            onClick={() => navigate('/youtubers')}
+            className="mb-8 px-8 py-3 bg-neutral-100 text-blue-600 rounded-xl font-bold text-base hover:bg-blue-200 transition-colors border border-blue-200"
+          >
+            Suggest a Channel
+          </button>
+          <h3 className="text-xl font-bold text-[#141414] text-center mb-4">Trending Creators</h3>
+          <div className="flex overflow-x-auto gap-6 pb-4 md:grid md:grid-cols-5 md:overflow-visible">
+            {trendingCreators.map((creator) => (
+              <div
+                key={creator.id}
+                className="bg-white rounded-xl p-4 shadow flex flex-col items-center min-w-[180px] max-w-[200px] cursor-pointer hover:scale-105 transition-transform border border-neutral-200"
+                onClick={() => navigate(`/youtuber/${creator.id}`)}
+              >
+                <img
+                  src={creator.profile_picture_url || `https://placehold.co/100x100/7c3aed/ffffff?text=${creator.name.charAt(0)}`}
+                  alt={creator.name}
+                  className="w-16 h-16 rounded-full border-4 border-neutral-200 object-cover mb-2"
+                  onError={e => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = `https://placehold.co/100x100/7c3aed/ffffff?text=${creator.name.charAt(0)}`;
+                  }}
+                />
+                <div className="font-bold text-[#141414] text-center">{creator.name}</div>
+                <div className="text-neutral-500 text-sm text-center mb-1">{creator.genre || 'General'}</div>
+                <div className="text-blue-600 font-semibold text-sm">{creator.subscriber_count.toLocaleString()} subs</div>
+              </div>
+            ))}
+          </div>
+          {randomReview && (
+            <div className="mt-10 flex flex-col items-center">
+              <h3 className="text-lg font-bold text-[#141414] mb-2">What users are saying</h3>
+              <div className="bg-white rounded-xl shadow p-6 max-w-xl w-full text-center">
+                <div className="text-neutral-600 italic mb-2">"{randomReview.review_text}"</div>
+                <div className="text-neutral-500 text-sm">- {randomReview.user_id.substring(0, 8)} on {randomReview.entity_type === 'youtuber' ? 'a creator' : 'a video'}</div>
+              </div>
+            </div>
+          )}
         </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="youmdb-card p-8 text-center transform hover:scale-105 transition-all duration-300">
-            <div className="w-16 h-16 bg-gradient-to-br from-youmdb-accent to-youmdb-purple-light rounded-full flex items-center justify-center mx-auto mb-6">
-              <Users className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-4">Discover Creators</h3>
-            <p className="text-slate-300">
-              Explore thousands of talented YouTubers and streamers across different genres and countries
-            </p>
-          </div>
-
-          <div className="youmdb-card p-8 text-center transform hover:scale-105 transition-all duration-300">
-            <div className="w-16 h-16 bg-gradient-to-br from-youmdb-highlight to-youmdb-success rounded-full flex items-center justify-center mx-auto mb-6">
-              <Star className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-4">Rate & Review</h3>
-            <p className="text-slate-300">
-              Share your thoughts and help others discover amazing content through ratings and detailed reviews
-            </p>
-          </div>
-
-          <div className="youmdb-card p-8 text-center transform hover:scale-105 transition-all duration-300">
-            <div className="w-16 h-16 bg-gradient-to-br from-youmdb-success to-youmdb-accent rounded-full flex items-center justify-center mx-auto mb-6">
-              <Video className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-4">AI Insights</h3>
-            <p className="text-slate-300">
-              Get AI-powered summaries and insights about your favorite creators and their content
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="bg-youmdb-secondary py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold youmdb-text-gradient mb-2">1M+</div>
-              <div className="text-slate-300">Creators</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold youmdb-text-gradient mb-2">5M+</div>
-              <div className="text-slate-300">Reviews</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold youmdb-text-gradient mb-2">50+</div>
-              <div className="text-slate-300">Countries</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold youmdb-text-gradient mb-2">24/7</div>
-              <div className="text-slate-300">AI Support</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
     </div>
   );
 };

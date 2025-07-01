@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Type definitions
@@ -55,171 +54,106 @@ export interface Profile {
   updated_at: string;
 }
 
-// YouTuber operations
-export async function getYouTubers(): Promise<YouTuber[]> {
-  try {
-    const { data, error } = await supabase
-      .from('youtubers')
-      .select('*')
-      .order('created_at', { ascending: false });
+// --- DUMMY DATA REMOVED ---
+// All data fetching below uses real Supabase queries only.
 
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching YouTubers:', error);
-    return [];
-  }
+export async function getYouTubers(): Promise<YouTuber[]> {
+  const { data, error } = await supabase.from('youtubers').select('*');
+  if (error) throw error;
+  return data || [];
 }
 
 export async function getYouTuberById(id: string): Promise<YouTuber | null> {
-  try {
-    const { data, error } = await supabase
-      .from('youtubers')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Error fetching YouTuber:', error);
-    return null;
-  }
+  const { data, error } = await supabase.from('youtubers').select('*').eq('id', id).single();
+  if (error) throw error;
+  return data || null;
 }
 
-// Video operations
 export async function getVideos(): Promise<Video[]> {
-  try {
-    const { data, error } = await supabase
-      .from('videos')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching videos:', error);
-    return [];
-  }
+  const { data, error } = await supabase.from('videos').select('*');
+  if (error) throw error;
+  return data || [];
 }
 
 export async function getVideosByYouTuberId(youtuberId: string): Promise<Video[]> {
-  try {
-    const { data, error } = await supabase
-      .from('videos')
-      .select('*')
-      .eq('youtuber_id', youtuberId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching videos by YouTuber:', error);
-    return [];
-  }
+  const { data, error } = await supabase.from('videos').select('*').eq('youtuber_id', youtuberId);
+  if (error) throw error;
+  return data || [];
 }
 
 export async function getVideoById(id: string): Promise<Video | null> {
-  try {
-    const { data, error } = await supabase
-      .from('videos')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Error fetching video:', error);
-    return null;
-  }
+  const { data, error } = await supabase.from('videos').select('*').eq('id', id).single();
+  if (error) throw error;
+  return data || null;
 }
 
-// Review operations
 export async function getReviews(entityId: string, entityType: 'youtuber' | 'video'): Promise<Review[]> {
-  try {
-    const { data, error } = await supabase
-      .from('reviews')
-      .select('*')
-      .eq('entity_id', entityId)
-      .eq('entity_type', entityType)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    
-    // Cast the entity_type to match our Review interface
-    return (data || []).map(review => ({
-      ...review,
-      entity_type: review.entity_type as 'youtuber' | 'video'
-    }));
-  } catch (error) {
-    console.error('Error fetching reviews:', error);
-    return [];
-  }
+  const { data, error } = await supabase.from('reviews').select('*').eq('entity_id', entityId).eq('entity_type', entityType);
+  if (error) throw error;
+  return (data || []).map((review: any) => ({
+    ...review,
+    entity_type: review.entity_type as 'youtuber' | 'video',
+  }));
 }
 
 export async function addReview(review: Omit<Review, 'id' | 'likes' | 'dislikes' | 'created_at' | 'updated_at'>): Promise<string | null> {
-  try {
-    const { data, error } = await supabase
-      .from('reviews')
-      .insert(review)
-      .select('id')
-      .single();
-
-    if (error) throw error;
-    return data?.id || null;
-  } catch (error) {
-    console.error('Error adding review:', error);
-    throw error;
-  }
+  const { data, error } = await supabase.from('reviews').insert(review).select('id').single();
+  if (error) throw error;
+  return data?.id || null;
 }
 
-// Search operations
 export async function searchYouTubersByName(searchTerm: string): Promise<YouTuber[]> {
-  try {
-    const { data, error } = await supabase
-      .from('youtubers')
-      .select('*')
-      .ilike('name', `%${searchTerm}%`)
-      .order('name');
-
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error('Error searching YouTubers:', error);
-    return [];
-  }
+  const { data, error } = await supabase.from('youtubers').select('*').ilike('name', `%${searchTerm}%`);
+  if (error) throw error;
+  return data || [];
 }
 
 export async function getYouTubersByCountry(country: string): Promise<YouTuber[]> {
-  try {
-    const { data, error } = await supabase
-      .from('youtubers')
-      .select('*')
-      .eq('country', country)
-      .order('name');
+  const { data, error } = await supabase.from('youtubers').select('*').eq('country', country);
+  if (error) throw error;
+  return data || [];
+}
 
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching YouTubers by country:', error);
-    return [];
-  }
+export async function getYouTubersByCountryAndState(country: string, state: string): Promise<YouTuber[]> {
+  const { data, error } = await supabase.from('youtubers').select('*').eq('country', country).eq('state', state);
+  if (error) throw error;
+  return data || [];
 }
 
 export async function getUniqueCountries(): Promise<string[]> {
-  try {
-    const { data, error } = await supabase
-      .from('youtubers')
-      .select('country')
-      .not('country', 'is', null);
+  const { data, error } = await supabase.from('youtubers').select('country').neq('country', '').neq('country', null);
+  if (error) throw error;
+  const unique = Array.from(new Set((data || []).map((row: any) => row.country)));
+  return unique;
+}
 
-    if (error) throw error;
-    
-    const countries = [...new Set(data?.map(item => item.country).filter(Boolean))];
-    return countries.sort();
-  } catch (error) {
-    console.error('Error getting unique countries:', error);
-    return [];
-  }
+export async function getUniqueStates(country: string): Promise<string[]> {
+  const { data, error } = await supabase.from('youtubers').select('state').eq('country', country).neq('state', '').neq('state', null);
+  if (error) throw error;
+  const unique = Array.from(new Set((data || []).map((row: any) => row.state)));
+  return unique;
+}
+
+export async function getUserReviews(userId: string): Promise<Review[]> {
+  const { data, error } = await supabase.from('reviews').select('*').eq('user_id', userId);
+  if (error) throw error;
+  return (data || []).map((review: any) => ({
+    ...review,
+    entity_type: review.entity_type as 'youtuber' | 'video',
+  }));
+}
+
+export async function getUserSuggestions(userId: string): Promise<any[]> {
+  const { data, error } = await supabase.from('channel_suggestions').select('*').eq('user_id', userId);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getAllReviews(): Promise<Review[]> {
+  const { data, error } = await supabase.from('reviews').select('*');
+  if (error) throw error;
+  return (data || []).map((review: any) => ({
+    ...review,
+    entity_type: review.entity_type as 'youtuber' | 'video',
+  }));
 }

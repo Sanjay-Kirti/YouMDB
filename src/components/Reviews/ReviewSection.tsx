@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Star, ThumbsUp, ThumbsDown, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,9 +8,10 @@ interface ReviewSectionProps {
   entityId: string;
   entityType: 'youtuber' | 'video';
   entityName: string;
+  starColor?: string;
 }
 
-export function ReviewSection({ entityId, entityType, entityName }: ReviewSectionProps) {
+export function ReviewSection({ entityId, entityType, entityName, starColor = '#141414' }: ReviewSectionProps) {
   const { user, canInteract } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,11 +94,8 @@ export function ReviewSection({ entityId, entityType, entityName }: ReviewSectio
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`w-5 h-5 ${
-              star <= rating 
-                ? 'text-yellow-400 fill-current' 
-                : 'text-gray-400'
-            } ${interactive ? 'cursor-pointer hover:text-yellow-300' : ''}`}
+            style={{ color: star <= rating ? starColor : '#d1d5db' }}
+            className={`w-5 h-5 ${interactive ? 'cursor-pointer' : ''}`}
             onClick={() => interactive && onRate && onRate(star)}
           />
         ))}
@@ -110,156 +107,102 @@ export function ReviewSection({ entityId, entityType, entityName }: ReviewSectio
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-2xl font-bold text-white flex items-center">
-          <MessageCircle className="w-6 h-6 mr-2 text-youmdb-accent" />
+        <h3 className="text-2xl font-bold text-[#141414] flex items-center">
+          <MessageCircle className="w-6 h-6 mr-2 text-blue-600" />
           Reviews for {entityName}
         </h3>
-        
         {canInteract && (
           <button
             onClick={() => setShowReviewForm(!showReviewForm)}
-            className="youmdb-button"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors"
           >
             Write Review
           </button>
         )}
       </div>
-
       {/* Review Form */}
       {showReviewForm && canInteract && (
-        <form onSubmit={handleSubmitReview} className="youmdb-card p-6">
+        <form onSubmit={handleSubmitReview} className="bg-white rounded-xl p-6 shadow border border-neutral-200 mb-4">
           <div className="mb-4">
-            <label className="block text-slate-300 text-sm font-medium mb-2">
+            <label className="block text-neutral-500 text-sm font-medium mb-2">
               Rating
             </label>
             {renderStars(rating, true, setRating)}
           </div>
-
           <div className="mb-4">
-            <label className="block text-slate-300 text-sm font-medium mb-2">
+            <label className="block text-neutral-500 text-sm font-medium mb-2">
               Review
             </label>
             <textarea
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
-              className="youmdb-input w-full h-32 resize-none"
+              className="w-full h-32 resize-none border border-neutral-200 rounded-lg p-2 text-[#141414] bg-neutral-50"
               placeholder="Share your thoughts about this creator/video..."
               required
             />
           </div>
-
           <div className="flex space-x-4">
             <button
               type="submit"
               disabled={submitting || !reviewText.trim()}
-              className="youmdb-button disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Submitting...' : 'Submit Review'}
             </button>
             <button
               type="button"
               onClick={() => setShowReviewForm(false)}
-              className="px-6 py-2 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors"
+              className="px-6 py-2 border border-neutral-200 text-neutral-500 rounded-lg hover:bg-neutral-100 transition-colors"
             >
               Cancel
             </button>
           </div>
         </form>
       )}
-
       {/* Access Notice for Guests */}
       {!canInteract && (
-        <div className="youmdb-card p-4 border border-youmdb-accent">
-          <p className="text-center text-slate-300">
-            <span className="text-youmdb-accent font-semibold">Sign in</span> to write reviews and interact with content
+        <div className="bg-neutral-100 rounded-xl p-4 border border-blue-600 mb-4">
+          <p className="text-center text-neutral-500">
+            <span className="text-blue-600 font-semibold">Sign in</span> to write reviews and interact with content
           </p>
         </div>
       )}
-
       {/* Reviews List */}
       {loading ? (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="youmdb-card p-6 animate-pulse">
+            <div key={i} className="bg-neutral-100 rounded-xl p-6 animate-pulse shadow">
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-slate-700 rounded-full mr-3"></div>
-                <div className="h-4 bg-slate-700 rounded w-24"></div>
+                <div className="w-8 h-8 bg-neutral-200 rounded-full mr-3"></div>
+                <div className="h-4 bg-neutral-200 rounded w-24"></div>
               </div>
-              <div className="h-4 bg-slate-700 rounded mb-2"></div>
-              <div className="h-4 bg-slate-700 rounded w-3/4"></div>
+              <div className="h-4 bg-neutral-200 rounded mb-2"></div>
+              <div className="h-4 bg-neutral-200 rounded w-3/4"></div>
             </div>
           ))}
         </div>
       ) : reviews.length > 0 ? (
         <div className="space-y-4">
           {reviews.map((review) => (
-            <div key={review.id} className="youmdb-card p-6">
+            <div key={review.id} className="bg-white rounded-xl p-6 shadow border border-neutral-200">
               {/* Review Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-youmdb-accent rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">
-                      {review.user_id?.substring(0, 1).toUpperCase() || 'U'}
-                    </span>
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                    {((review as any).user_name || review.user_id || 'U').charAt(0)}
                   </div>
-                  <div>
-                    <div className="text-slate-300 text-sm">
-                      {review.user_id?.substring(0, 8) || 'Anonymous'}...
-                    </div>
-                    <div className="text-slate-500 text-xs">
-                      {formatTimestamp(review.created_at)}
-                    </div>
-                  </div>
+                  <span className="text-[#141414] font-semibold">{(review as any).user_name || (review.user_id ? review.user_id.substring(0, 8) : 'User')}</span>
+                  <span className="text-neutral-400 text-xs">{formatTimestamp(review.created_at)}</span>
                 </div>
-                {renderStars(review.rating || 0)}
+                {renderStars(review.rating)}
               </div>
-
-              {/* Review Text */}
-              <p className="text-slate-300 mb-4">{review.review_text}</p>
-
-              {/* Like/Dislike Buttons */}
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => handleLikeToggle(review.id, true)}
-                  disabled={!canInteract}
-                  className={`flex items-center space-x-2 px-3 py-1 rounded-lg transition-colors ${
-                    canInteract
-                      ? user && review.likes?.includes(user.id)
-                        ? 'bg-youmdb-success text-white'
-                        : 'text-slate-400 hover:text-youmdb-success hover:bg-slate-700'
-                      : 'text-slate-500 cursor-not-allowed'
-                  }`}
-                >
-                  <ThumbsUp className="w-4 h-4" />
-                  <span>{review.likes?.length || 0}</span>
-                </button>
-
-                <button
-                  onClick={() => handleLikeToggle(review.id, false)}
-                  disabled={!canInteract}
-                  className={`flex items-center space-x-2 px-3 py-1 rounded-lg transition-colors ${
-                    canInteract
-                      ? user && review.dislikes?.includes(user.id)
-                        ? 'bg-red-600 text-white'
-                        : 'text-slate-400 hover:text-red-400 hover:bg-slate-700'
-                      : 'text-slate-500 cursor-not-allowed'
-                  }`}
-                >
-                  <ThumbsDown className="w-4 h-4" />
-                  <span>{review.dislikes?.length || 0}</span>
-                </button>
-              </div>
+              <div className="text-neutral-500 mb-2">{review.review_text}</div>
+              {/* Like/Dislike (future) */}
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-center py-8">
-          <MessageCircle className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-          <h4 className="text-lg font-semibold text-slate-300 mb-2">No Reviews Yet</h4>
-          <p className="text-slate-400">
-            Be the first to share your thoughts about this {entityType}!
-          </p>
-        </div>
+        <div className="text-center py-8 text-neutral-400">No reviews yet. Be the first to write one!</div>
       )}
     </div>
   );
